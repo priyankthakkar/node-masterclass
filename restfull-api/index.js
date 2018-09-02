@@ -28,19 +28,54 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
         buffer = buffer + decoder.end();
 
-        // Log the path
-        console.log(`Requested path is: ${trimmedPath} with method: ${method} and with parameters`, parameters);
+        // Choose the request handler
+        const chosenHandler = router[trimmedPath] ? router[trimmedPath] : handlers.notFound;
 
-        // Log headers
-        console.log(`Headers sent with request are: `, headers);
+        // Form data for handler
+        const data = {
+            method: method,
+            uri: trimmedPath,
+            queryString: parameters,
+            headers: headers,
+            payload: buffer
+        };
 
-        // Log payload
-        console.log('Payload received with request is: ', buffer);
+        // Pass data to handler, define callback
+        chosenHandler(data, (statusCode, response) => {
+            // set status code, default is 200
+            statusCode = typeof(statusCode) === 'number' ? statusCode : 200;
+
+            // set response, default is an empty object
+            response = typeof(response) === 'object' ? response : {};
+            const responseJson = JSON.stringify(response);
+
+            // write status code
+            res.writeHead(statusCode);
+
+            // finish request
+            res.end(responseJson);
+        });
 
         // Send response
         return res.end('Hello World');
     });
 });
+
+const handlers = {};
+
+handlers.sample = (data, callback) => {
+    console.log('Sample handler is processing: ', data);
+    callback(200, { message: 'Data processed successfully.'});
+}
+
+handlers.notFound = (data, callback) => {
+    callback(404);
+}
+
+// Define a request router
+const router = {
+    'sample': handlers.sample
+};
 
 server.listen(3000, () => {
     console.log(`Server is listening on port 3000`);
