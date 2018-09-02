@@ -13,8 +13,14 @@ const server = http.createServer((req, res) => {
     // Extract query string parameters
     const parameters = parsedUrl.query;
 
+    // Extract headers
+    const headers = req.headers;
+
     // Log the path
     console.log(`Requested path is: ${trimmedPath} with method: ${method} and with parameters`, parameters);
+
+    // Log headers
+    console.log(`Headers sent with request are: `, headers);
 
     // Send response
     return res.end('Hello World');
